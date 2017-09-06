@@ -23,7 +23,10 @@ apply plugin: 'application'
 apply plugin: "com.github.johnrengelman.shadow"
 
 sourceCompatibility = 1.8
-mainClassName = 'HelloKt'
+mainClassName = 'io.vertx.core.Launcher'
+
+def vertx_version= '3.4.2'
+def mainVerticleName = 'name.yulong.web.MainVerticle'
 
 repositories {
     jcenter()
@@ -31,7 +34,14 @@ repositories {
 }
 
 dependencies {
+    //kt运行时环境
     compile "org.jetbrains.kotlin:kotlin-stdlib-jre8:$kotlin_version"
+
+    //vertx依赖
+    compile "io.vertx:vertx-core:$vertx_version"
+    compile "io.vertx:vertx-web:$vertx_version"
+
+
     testCompile group: 'junit', name: 'junit', version: '4.12'
 }
 
@@ -40,4 +50,24 @@ compileKotlin {
 }
 compileTestKotlin {
     kotlinOptions.jvmTarget = "1.8"
+}
+
+run {
+    args = ['run', mainVerticleName,
+            "--launcher-class=$mainClassName",
+            "--redeploy=src/**/*.*",
+            "--on-redeploy=./gradlew classes"
+    ]
+}
+
+shadowJar {
+    baseName = 'app'
+    classifier = 'shadow'
+
+    manifest {
+        attributes 'Main-Verticle': mainVerticleName
+    }
+    mergeServiceFiles {
+        include 'META-INF/services/io.vertx.core.spi.VerticleFactory'
+    }
 }
